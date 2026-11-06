@@ -1,0 +1,89 @@
+# Git Study Summary
+
+## What Git Is and Why It Matters
+
+- **Version Control**: Tracks changes to code and configs over time, so you can undo, inspect, collaborate, revert, review and branch safely. Think of it as a time machine for code.
+- **Why DevOps Needs It**: It's how teams collaborate, test, ship and recover from production breaks.
+
+## Git vs SVN
+
+- **History**: SVN has a single source of truth, while Git keeps the full history on every machine.
+- **Network**: SVN needs a network to commit, while Git works offline.
+- **Branching**: SVN conflicts are common, while Git has fast branching and merging.
+- **Outages**: With SVN, server down means devs are stuck, while Git is resilient to outages.
+- **Editing**: SVN locks files during edits, while with Git everyone commits locally.
+
+## The Three Areas
+
+- **Working Directory**: Where you edit files. Git isn't tracking these changes yet.
+- **Staging Area (Index)**: A prep zone for what goes into the next snapshot.
+- **Repository**: Your local `.git` folder, holding all commits and history.
+
+The flow is: Working Directory → `git add` → Staging Area → `git commit` → Repository
+
+Two rules to remember:
+
+- **Saving ≠ Tracking**: Saving a file in your editor doesn't mean Git is tracking it. You must `git add`.
+- **Staging ≠ Saved Forever**: `git add` isn't permanent. You must `git commit`.
+
+## Commands by Job
+
+### Set Up
+
+- `git config`: Set your name and email (required once).
+- `git init`: Create a new repo.
+- `git clone`: Copy a remote repo locally.
+
+### Save Work
+
+- `git add`: Stage changes.
+- `git commit`: Take a snapshot (checkpoint).
+
+### Look Around
+
+- `git status`: See what's staged, changed or untracked. Use it constantly.
+- `git log`: View history.
+- `git diff`: See what changed.
+
+### Fix and Tidy
+
+- `git restore`: Undo file changes without rolling back a commit.
+- `git rm`: Remove tracked files.
+- `git mv`: Rename a file and keep its history.
+
+### Get Help
+
+- `git help`: Open the manual for any command.
+
+## Vocabulary
+
+- **Repository (Repo)**: A folder tracked by Git (it contains `.git`).
+- **Commit**: A snapshot of files plus metadata (author, timestamp, message, parent commit).
+- **Branch**: A movable pointer to a commit (`main`, `dev`, `feature/login`).
+- **Remote**: A reference to an external copy of the repo (GitHub, GitLab), usually named `origin`.
+- **Tag**: A name pointing at a specific commit, used for releases (`v1.0.0`).
+
+## Under the Hood
+
+- **Blob**: The content of a file (no filename).
+- **Tree**: Filenames and paths pointing to blobs and other trees, i.e. a directory snapshot.
+- **Ref**: A pointer to a commit (branches, tags, HEAD).
+- **HEAD**: Where you are now (the current branch or commit).
+- **Index**: The binary file that holds the staging area.
+- **Object Store**: Where Git keeps all blobs, trees and commits, identified by SHA hash.
+
+## Inside the .git Folder
+
+- **`.git/refs`**: Branches and tags.
+- **`.git/objects`**: The object store (your project's "hard drive").
+- **`.git/config`**: Repo-specific settings and remotes.
+- **`.git/HEAD`**: Current branch or commit.
+- **`.git/index`**: The staging area.
+
+If you lose `.git`, you keep the files but lose all history, branches and config. Git gets amnesia.
+
+## Quick Self-Test
+
+- What are the three areas, and which command moves files between each?
+- What's the difference between a blob and a tree?
+- Which file tells Git what branch you're on?
