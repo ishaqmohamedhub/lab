@@ -1,0 +1,100 @@
+# Git Summary
+
+## Squash
+
+Combines several commits into one so the history stays clean. If 5 commits are all part of one task, squash turns them into a single commit.
+
+```bash
+git log --oneline          # shows 3 commits
+git rebase -i HEAD~3       # interactive rebase on the last 3 commits
+```
+
+An editor opens listing the 3 commits. Leave the first as `pick` and change the other two to `squash`, then save (`:wq`). Git asks for one combined commit message, and you save again.
+
+```bash
+git log --oneline          # now shows 1 commit
+git push origin feature-rebase
+```
+
+> **Warning:** Squashing rewrites history. Only do it on your own branch. If you've already pushed it, you'll need a force push.
+
+## Undoing Changes
+
+- **Unstaged Edit**: `git restore file.txt` discards the change.
+- **Staged by Mistake**: `git restore --staged file.txt` unstages it.
+- **Bad Commit, Not Pushed (Keep Staged)**: `git reset --soft HEAD~1`
+- **Bad Commit, Not Pushed (Keep Unstaged)**: `git reset --mixed HEAD~1`
+- **Bad Commit, Not Pushed (Delete Everything)**: `git reset --hard HEAD~1`. Dangerous.
+- **Bad Commit, Already Pushed**: `git revert HEAD`
+
+Useful to know:
+
+- **`git revert`**: Creates a new commit that undoes the old one. It's safe for shared branches because it doesn't rewrite history.
+- **`git log --oneline`**: Shows a compact history.
+- **`git reflog`**: Records every move, so you can recover commits even after a reset.
+
+**Rule of thumb:** not pushed means reset, amend or rebase. Pushed means revert.
+
+## Stash
+
+A drawer for half-finished work, so you can switch tasks without committing.
+
+```bash
+git stash push -m "work in progress"   # save and clean the working tree
+# ...do the urgent hotfix, commit, push...
+git stash list                         # see what's stored
+git stash pop                          # bring it back and delete the stash
+```
+
+- **`git stash apply`**: Brings the work back but keeps the stash.
+- **`git stash clear`**: Deletes all stashes.
+
+## Cherry-Pick
+
+Copies one specific commit from another branch onto your current one. Useful when you need one fix without merging everything else on that branch.
+
+```bash
+git checkout feature-cherry
+git log --oneline                      # copy the commit ID
+git checkout main
+git cherry-pick <commit-id>
+git push origin main
+```
+
+## Amend
+
+Rewrites your last commit, either to fix the message or to add a forgotten file.
+
+```bash
+git add meta.txt
+git commit --amend                     # folds meta.txt into the last commit
+```
+
+If you've already pushed, you need a force push afterwards.
+
+## Pre-Commit Hooks
+
+Scripts that run automatically before a commit is accepted. If a check fails, the commit is blocked.
+
+```bash
+pre-commit install                     # one-time setup per repo
+git commit -m "add feature"            # hooks run automatically
+```
+
+Hooks are defined in `.pre-commit-config.yaml`. Common ones check:
+
+- Terraform formatting
+- YAML validity
+- A missing newline at the end of files
+- Accidentally committed secrets
+- Oversized files
+
+## The One-Line Version
+
+- **Squash**: Many commits become one.
+- **Amend**: Edit the last commit.
+- **Stash**: Shelve unfinished work.
+- **Cherry-Pick**: Steal one commit.
+- **Revert**: Undo safely, with a new commit.
+- **Reset**: Undo by rewinding (local only).
+- **Pre-Commit**: Automatic quality gate.
