@@ -1,0 +1,117 @@
+# Git Part 2: Study Summary
+
+## Stash and Pop
+
+Use stash when you're not ready to commit but need to switch branches.
+
+- `git stash`: Saves uncommitted changes and cleans your working directory.
+- `git stash list`: Shows all stashes.
+- `git stash apply`: Reapplies the latest stash and keeps it.
+- `git stash pop`: Reapplies the latest stash and deletes it.
+
+## Undoing Things
+
+The one rule that matters: **shared history → revert. Local-only → reset.**
+
+- **`git revert`**: Creates a new commit that undoes an old one. History is kept, so it's safe on shared branches and in production.
+- **`git reset`**: Moves the branch pointer backwards (rewrites history).
+- **`git cherry-pick <sha>`**: Applies one commit from another branch onto yours. Good for hotfixes and targeted changes.
+
+### Reset Modes
+
+- **`--soft`**: Keeps your changes, still staged.
+- **`--mixed`** (default): Keeps your changes, unstaged.
+- **`--hard`**: Deletes the changes entirely. Be careful.
+
+## Forks and Pull Requests
+
+Contributing to someone else's repo:
+
+- **Fork**: Your own copy of the repo on GitHub.
+- **Clone**: Copy your fork locally.
+- **Change and Push**: Make your changes and push them to your fork.
+- **Open a PR**: The original owner reviews, comments and merges.
+
+Standard for open source and cross-team work.
+
+## Collaboration Practices
+
+- **Branch**: Isolate your work.
+- **Pull Requests**: Push and open PRs, assign reviewers and comment in GitHub's UI.
+- **Conflicts**: Resolve them before merging.
+- **Tracking**: Use Issues, Projects and Discussions.
+- **Commits**: Keep them focused and clean, with clear messages.
+
+## Secrets Hygiene
+
+- **Why It Matters**: Bots scan public repos 24/7, so leaked credentials get used within minutes.
+- **Prevent**: Use `.gitignore`, plus scanners like `git-secrets` and `trufflehog` that check before you commit.
+- **If Leaked**: Rotate the secret and clean the history (`git filter-repo`, BFG). Deleting the file isn't enough, because it still lives in old commits.
+- **Audit**: Review `git log` periodically.
+
+## If You Push a Secret: The Playbook
+
+Order matters: **rotate first, clean second.** Assume it's already compromised. Cleaning history doesn't un-leak anything.
+
+### Step 1: Revoke and Rotate
+
+Do this in minutes, not hours.
+
+- **Disable the Key**: Deactivate the leaked key or password at the source (AWS: IAM → deactivate the access key, create a new one).
+- **Check Logs**: Look for activity you don't recognise (AWS: CloudTrail).
+
+### Step 2: Fix the Code Going Forward
+
+```bash
+echo ".env" >> .gitignore
+git rm --cached .env        # stop tracking it, keep the local file
+git commit -m "Stop tracking .env"
+```
+
+Load secrets from environment variables or a secrets manager instead.
+
+### Step 3: Purge It from History
+
+A normal delete commit leaves the secret in old commits. Rewrite history on a fresh clone:
+
+```bash
+# Option A: git filter-repo (remove a whole file everywhere)
+git filter-repo --invert-paths --path .env
+
+# Option A2: scrub specific strings instead
+git filter-repo --replace-text secrets.txt
+
+# Option B: BFG Repo-Cleaner
+bfg --delete-files .env
+git reflog expire --expire=now --all && git gc --prune=now --aggressive
+```
+
+### Step 4: Force-Push the Rewritten History
+
+```bash
+git remote add origin <url>   # filter-repo removes the remote as a safety measure
+git push --force --all
+git push --force --tags
+```
+
+This is the rare case where force-pushing shared history is correct. Tell your team to re-clone rather than pull, or the old history gets pushed back.
+
+### Step 5: Check What's Left
+
+- **Leftovers**: Forks, existing clones and open PRs can still hold the old commits.
+- **Public Repos**: You can ask GitHub Support to purge cached views.
+- **Verify**: Run `git log --all -S'the-secret-string'` or run `trufflehog` over the repo.
+
+### Step 6: Prevent a Repeat
+
+- **Pre-commit Hook**: Add one with `git-secrets`, `gitleaks` or `trufflehog`.
+- **GitHub Protection**: Turn on secret scanning and push protection on the repo.
+
+Not pushed yet? Much easier: `git reset --soft HEAD~1`, remove the secret, recommit. Nothing has left your machine.
+
+## Quick Self-Test
+
+- You committed a bad change on `main` and others have pulled it. Revert or reset, and why?
+- What's the difference between `stash apply` and `stash pop`?
+- You deleted `.env` in a new commit after pushing it. Why are you still compromised?
+- What's the very first thing you do after a leak?
